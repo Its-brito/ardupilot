@@ -2,11 +2,16 @@
 
 #include "AC_CustomControl.h"
 
+
 #if AP_CUSTOMCONTROL_ENABLED
 
 #include "AC_CustomControl_Backend.h"
 // #include "AC_CustomControl_Empty.h"
 #include "AC_CustomControl_PID.h"
+#if AP_CUSTOMCONTROL_INDI_ENABLED
+#include "AC_CustomControl_INDI.h"
+#endif
+
 #include <GCS_MAVLink/GCS.h>
 #include <AP_Logger/AP_Logger.h>
 #include <AP_Scheduler/AP_Scheduler.h>
@@ -16,7 +21,7 @@ const AP_Param::GroupInfo AC_CustomControl::var_info[] = {
     // @Param: _TYPE
     // @DisplayName: Custom control type
     // @Description: Custom control type to be used
-    // @Values: 0:None, 1:Empty, 2:PID
+    // @Values: 0:None,1:Empty,2:PID,3:INDI
     // @RebootRequired: True
     // @User: Advanced
     AP_GROUPINFO_FLAGS("_TYPE", 1, AC_CustomControl, _controller_type, 0, AP_PARAM_FLAG_ENABLE),
@@ -34,6 +39,11 @@ const AP_Param::GroupInfo AC_CustomControl::var_info[] = {
     // parameters for PID controller
     AP_SUBGROUPVARPTR(_backend, "2_", 7, AC_CustomControl, _backend_var_info[1]),
 
+#if AP_CUSTOMCONTROL_INDI_ENABLED
+    // parameters for INDI controller
+    AP_SUBGROUPVARPTR(_backend, "3_", 8, AC_CustomControl, _backend_var_info[2]),
+#endif
+
     AP_GROUPEND
 };
 
@@ -46,7 +56,6 @@ AC_CustomControl::AC_CustomControl(AP_AHRS_View*& ahrs, AC_AttitudeControl*& att
 {
     AP_Param::setup_object_defaults(this, var_info);
 }
-
 void AC_CustomControl::init(void)
 {
     _dt = AP::scheduler().get_loop_period_s();
@@ -64,6 +73,14 @@ void AC_CustomControl::init(void)
             _backend = NEW_NOTHROW AC_CustomControl_PID(*this, _ahrs, _att_control, _motors, _dt);
             _backend_var_info[get_type()] = AC_CustomControl_PID::var_info;
             break;
+            
+#if AP_CUSTOMCONTROL_INDI_ENABLED
+        case CustomControlType::CONT_INDI:
+            _backend = NEW_NOTHROW AC_CustomControl_INDI(*this, _ahrs, _att_control, _motors, _dt);
+            _backend_var_info[get_type()] = AC_CustomControl_INDI::var_info;
+            break;
+#endif
+            
         default:
             return;
     }

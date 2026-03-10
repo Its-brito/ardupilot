@@ -1,7 +1,7 @@
 #include "Plane.h"
 
 #include <AP_Gripper/AP_Gripper.h>
-
+#include <AC_CustomControl/AC_CustomControl.h> 
 /*
  *  ArduPlane parameter definitions
  *
@@ -819,6 +819,7 @@ const AP_Param::Info Plane::var_info[] = {
     { "Q_A_", (const void *)&plane.quadplane.attitude_control,
       {group_info : AC_AttitudeControl_Multi::var_info}, AP_PARAM_FLAG_POINTER,
       Parameters::k_param_q_attitude_control, AP_PARAM_GROUP },
+      
 #endif
 
     // @Group: RLL
